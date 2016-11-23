@@ -1,14 +1,5 @@
 /**
  * Library to allow precision ADC measurements on Arduino platform.
- *
- * Since all ADC readings are done against a specific voltage reference, the
- * exact reference voltage is needed to accurately interpret the read ADC value
- * as a voltage.
- * .... TODO ...
- * Function to get an accurate value for VCC supplied to an arduino using the
- * internal 1.1V bandgap reference.
- * Knowing the true VCC value makes converting ADC readings to voltages more
- * accurate.
  */
 
 #include "PrecisionADC.h"
@@ -63,8 +54,12 @@ bgMem bgEEPROMID {"bgID"}; // Struct that will be used as BG ref EEPROM ID
  * we can always get a very accurate VCC using the technique above.
  */
 uint32_t PrecisionADC::bgADC() {
-	// Read 1.1V reference against AVcc
-	// set the reference to Vcc and the measurement to the internal 1.1V reference
+    // NOTE: this is not my code and bits and pieces were cobbled together from
+    // all over the interwebs to get something that is supposed to work with
+    // most Arduino supported MCU. My great thanks to all these authors!
+
+	// Read Bandgap voltage reference against AVcc
+	// set the reference to Vcc and the measurement to the internal bandgap reference
 	#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 	ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
 	#elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
@@ -91,7 +86,7 @@ uint32_t PrecisionADC::bgADC() {
  * Uses the bgADC() method to measure the bandgap reference against Vcc and
  * then calculates the true VCC from there.
  *
- * @return The calculated VCC.
+ * @return: The calculated VCC.
  **/
 uint16_t PrecisionADC::readVcc() {
 	uint32_t bgVal = bgADC();
@@ -347,4 +342,30 @@ bool PrecisionADC::getFromEEPROM() {
 
     // We did not get a valid saved ref ID
     return false;
+}
+
+/**
+ * Performs an analogRead() on the given pin, and returns an accurate voltage
+ * representation in milli volt.
+ *
+ * This method will expect the analog regerence to be the DEFAULT supply
+ * voltage. It will always first make a measurement of the current VCC, then do
+ * an analogRead() on the given pin, and use the measured VCC to convert the
+ * analog value to a voltage in milli volts.
+ *
+ * Due to the multiple sampling, this method is a lot slower than a simple
+ * analogRead().
+ *
+ * @param pin (uint16_t): The analog pin to sample for the voltage reading
+ * @return (uint16_t): The representative voltage in millivolt
+ * 
+ * @todo: We may need some buffering and summing/averaging to increase accuracy
+ * since there are still some very small errors.
+ **/
+uint16_t PrecisionADC::analogVoltage(uint16_t pin) {
+    uint16_t vcc = readVcc();         // Get current VCC
+    uint16_t adcIn = analogRead(pin); // Get ADC value
+
+    // Convert to voltage
+    return map(adcIn, 0, 1023, 0, vcc);
 }

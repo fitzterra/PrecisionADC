@@ -59,6 +59,7 @@ class PrecisionADC {
         uint16_t readVcc(); // Returns the real VCC based on the bandgap voltage
 
         void fineTuneBG();  // Interactively fine tune the bandgap reference
+        uint16_t analogVoltage(uint16_t pin); // Samples voltage on analog pin
 };
 
 #endif  // __Precision_VCC__
