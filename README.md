@@ -31,7 +31,7 @@ voltage to determine the true VCC as described below.
 Using the internal bandgap reference to determine VCC
 -----------------------------------------------------
 The Atmel MCUs used in the Arduino range has an internal bandgap voltage
-reference of 1.1V(*), which is stable regardless of supply voltage.
+reference of 1.1V, which is stable regardless of supply voltage.
 
 There is a way that this internal bandgap voltage can be used as analog input
 and measured as if it is connected to an analog pin. This masurement can be done
@@ -41,14 +41,14 @@ Since the bangap voltage is known, we can determine VCC by rearanging the
 formula used to calculate the ADC value. From the Atmel datasheet, the ADC value
 will be given by this formula:
 
-ADC = (Vin/Vref) * 1024
+    ADC = (Vin/Vref) * 1024
 
 Where `Vin` is the analog input voltage (the bandgap reference in this case),
 and Vref is VCC.
 
 Solving for Vref, we get:
 
-Vref = (Vin/ADC) * 1024
+    Vref = (Vin/ADC) * 1024
 
 In short this means that we can determine VCC by measuring the internal bandgap
 voltage with VCC as reference, and the nused the rearranged formula to figure
@@ -71,7 +71,7 @@ for each individual MCU.
 If we can figure out the exact bandgap reference for a specific MCU, we can use
 that value in the formula mentioned above:
 
-Vref = (Vbandgap/ADC) * 1024
+    Vref = (Vbandgap/ADC) * 1024
 
 to get a very accurate VCC value when measuring the bandgap voltage with VCC as
 reference.
@@ -83,14 +83,14 @@ we should be set.
 ### Measuring the true bandgap reference voltage
 A simple way of meassuring the true bandgap voltage is:
 
-  1) use a multimeter to measure the actual VCC to the MCU
-  2) start with an assumption of the bandgap reference being 1100mv
-  3) measure the actual bandgap voltage with VCC as reference as described above
-  4) use the formula above to calculate VCC
-  5) compare the the calculated VCC with the VCC reading on the multimeter
-  6) adjust the bandgap reference value up or down based on the difference
-     between calculated VCC and measured VCC
-  7) repeat from step 3 until calculated and measured VCC matches.
+1. use a multimeter to measure the actual VCC to the MCU
+2. start with an assumption of the bandgap reference being 1100mv
+3. measure the actual bandgap voltage with VCC as reference as described above
+4. use the formula above to calculate VCC
+5. compare the the calculated VCC with the VCC reading on the multimeter
+6. adjust the bandgap reference value up or down based on the difference
+   between calculated VCC and measured VCC
+7. repeat from step 3 until calculated and measured VCC matches.
 
 The `PrecisionADC::fineTuneBG()` method can be used to do exactly this. When
 called, it will present a menu of option on the serial console, and allow you to
@@ -119,6 +119,7 @@ found.
 PrecisionADC usage
 ------------------
 To use this library:
+
 1. include it in your source
 2. create an instance of the `PrecisionADC` class
 3. ensure the instance has an accurate bandgap reference
