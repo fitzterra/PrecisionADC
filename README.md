@@ -118,5 +118,55 @@ found.
 
 PrecisionADC usage
 ------------------
-ToDo
+To use this library:
+1. include it in your source
+2. create an instance of the `PrecisionADC` class
+3. ensure the instance has an accurate bandgap reference
+4. use the `analogVoltage()` method on any anlog pin to read as milli volt
 
+Example:
+```c++
+#include <PrecisionADC.h>
+
+#define SENSEPIN A0     // Pin sensor is connected to
+
+PrecisionADC pADC;
+
+void setup() {
+  Serial.begin(115200);
+}
+
+/**
+ * Monitor serial input for fine tuning bandgap, or showing current VCC.
+ **/
+void serialEvent() {
+    char in;
+
+    in = Serial.read();
+    switch (in) {
+        case 't':
+            pADC.fineTuneBG();
+            break;
+        case 'v':
+            Serial.print("Vcc: ");
+            Serial.print(pADC.readVcc());
+            Serial.println("mV");
+            break;
+    }
+}
+
+/**
+ * Main loop
+ **/
+void loop() {
+  int sensemV = pADC.analogVoltage(SENSEPIN);
+
+  Serial.print("Analog Voltage: ");
+  Serial.print(sensemV);
+  Serial.println("mV");
+  delay(1000);
+}
+```
+
+TODO: Explain how to set/save measured bandgap voltage, and other available
+methods.
