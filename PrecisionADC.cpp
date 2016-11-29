@@ -83,19 +83,6 @@ uint32_t PrecisionADC::bgADC() {
 }
 
 /**
- * Uses the bgADC() method to measure the bandgap reference against Vcc and
- * then calculates the true VCC from there.
- *
- * @return: The calculated VCC.
- **/
-uint16_t PrecisionADC::readVcc() {
-	uint32_t bgVal = bgADC();
-
-	uint32_t vcc = (bgRefmV * 1024L) / bgVal; // Calculate Vcc (in mV)
-	return (uint16_t)vcc; // Vcc in millivolts
-}
-
-/**
  * Private method to read and decode keyboard input from the serial port.
  *
  * Since some control keys like the arrow keys are multi character inputs, this
@@ -192,6 +179,60 @@ uint8_t PrecisionADC::readSerial(uint8_t tout) {
 }
 
 /**
+ * Writes the current (adjusted) bandgap reference voltage to EEPROM.
+ *
+ * This allows the exact (calibrated) BG reference for this specific MCU
+ * to be saved in EEPROM in a specific format that will allow it to be
+ * identified and read back in again later after power cycling.
+ **/
+void PrecisionADC::toEEPROM() {
+    // Put the current bandgap ref into bgEEPROMID before writing to EEPROM
+    bgEEPROMID.bgRef = bgRefmV;
+    // Write it
+    EEPROM.put(EEPROMAddy, bgEEPROMID);
+};
+
+/**
+ * Reads data from the EEPROM at EEPROMAddy and tests if this is a valid BG
+ * reference ID structure.
+ *
+ * If the structure is correct, updates bgRefmV with the saved reference
+ * voltage.
+ *
+ * @return : True if a valid saved refrence was found, false otherwise.
+ **/
+bool PrecisionADC::fromEEPROM() {
+    // Declare a BG ref ID to receive the data from the EEPROM.
+    bgMem savedRef;
+
+    // Get from EEPROM
+    EEPROM.get(EEPROMAddy, savedRef);
+    // Check if the labels match
+    if(strcmp(bgEEPROMID.label, savedRef.label) == 0) {
+        // Update the reference
+        bgRefmV = savedRef.bgRef;
+        // Indicate success
+        return true;
+    }
+
+    // We did not get a valid saved ref ID
+    return false;
+}
+
+/**
+ * Uses the bgADC() method to measure the bandgap reference against Vcc and
+ * then calculates the true VCC from there.
+ *
+ * @return: The calculated VCC.
+ **/
+uint16_t PrecisionADC::readVcc() {
+	uint32_t bgVal = bgADC();
+
+	uint32_t vcc = (bgRefmV * 1024L) / bgVal; // Calculate Vcc (in mV)
+	return (uint16_t)vcc; // Vcc in millivolts
+}
+
+/**
  * This method can be used to interactively fine tune the exact bandgap voltage
  * for this MCU.
  *
@@ -215,7 +256,7 @@ uint8_t PrecisionADC::readSerial(uint8_t tout) {
  * NOTE: It is assumed that the main application has already set up the serial
  * connection before this method is called.
  **/
-void PrecisionADC::fineTuneBG() {
+void PrecisionADC::calibrateBG() {
     const uint16_t updateFreq = 1000;   // Live Vcc update frequency - mSecs
     char state = FT_STATE_MENU;         // Start off showing the menu
     uint8_t key;                        // Will represent key pressed
@@ -274,11 +315,11 @@ void PrecisionADC::fineTuneBG() {
             }
             if(key==KEY_TWO) {
                 // Save our current bandgap reference value to EEPROM
-                saveToEEPROM();
+                toEEPROM();
                 Serial.print(F("\nSaved to EEPROM.\n\n"));
             } else {
                 // Get any saved reference from EEPROM
-                if (getFromEEPROM()) {
+                if (fromEEPROM()) {
                     Serial.print(F("Retrieved saved value from EEPROM.\n\n"));
                 } else {
                     // No previously saved value was found.
@@ -300,48 +341,6 @@ void PrecisionADC::fineTuneBG() {
             }
         }
     }
-}
-
-/**
- * Writes the current (adjusted) bandgap reference voltage to EEPROM.
- *
- * This allows the exact (after fine tuning) BG reference for this specific MCU
- * to be saved in EEPROM in a specific format that will allow it to be
- * identified and read back in again later after power cycling.
- * 
- **/
-void PrecisionADC::saveToEEPROM() {
-    // Put the current bandgap ref into bgEEPROMID before writing to EEPROM
-    bgEEPROMID.bgRef = bgRefmV;
-    // Write it
-    EEPROM.put(EEPROMAddy, bgEEPROMID);
-};
-
-/**
- * Reads data from the EEPROM at EEPROMAddy and tests if this is a valid BG
- * reference ID structure.
- *
- * If the structure is correct, updates bgRefmV with the saved reference
- * voltage.
- *
- * @return : True if a valid saved refrence was found, false otherwise.
- **/
-bool PrecisionADC::getFromEEPROM() {
-    // Declare a BG ref ID to receive the data from the EEPROM.
-    bgMem savedRef;
-
-    // Get from EEPROM
-    EEPROM.get(EEPROMAddy, savedRef);
-    // Check if the labels match
-    if(strcmp(bgEEPROMID.label, savedRef.label) == 0) {
-        // Update the reference
-        bgRefmV = savedRef.bgRef;
-        // Indicate success
-        return true;
-    }
-
-    // We did not get a valid saved ref ID
-    return false;
 }
 
 /**

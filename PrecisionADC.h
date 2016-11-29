@@ -21,7 +21,7 @@
 #define KEY_ONE    5
 #define KEY_TWO    6
 
-// State names for fineTuneBG() method
+// State names for calibrateBG() method
 #define FT_STATE_MENU 'A'
 #define FT_STATE_TUNE 'B'
 
@@ -42,14 +42,18 @@ const uint16_t EEPROMAddy = E2END - sizeof(bgMem);
 class PrecisionADC {
         uint16_t bgRefmV;   // Bandgap reference voltage in mV. 1100mV default
         uint32_t bgADC();   // Reads the bandgap ADC value relative to VCC
-        void saveToEEPROM();// Writes the current bandgap reference to EEPROM
-        bool getFromEEPROM();//Reads a previously saved bandgap ref from EEPROM
         uint8_t readSerial(uint8_t tout=100); // Monitors and decodes serial in
     public:
         // Constructor to use default BGREFmV bandgap or from EEPROM if available
-        PrecisionADC() : bgRefmV(BGREFmV) { getFromEEPROM(); };
+        PrecisionADC() : bgRefmV(BGREFmV) { fromEEPROM(); };
         // Constructor that accepts bandgap ref voltage in mV as arg
         PrecisionADC(uint16_t mV) : bgRefmV(mV) {};
+
+        // Writes the current (calibrated) bandgap reference to EEPROM
+        void toEEPROM();
+        // Sets the bandgap ref from a previously saved EEPROM value. Returns
+        // true if a valid saved bg ref was found, false otherwise.
+        bool fromEEPROM();
 
         // Sets a previously determined, more accurate, bandgap voltage in mV
         void setBGRef(uint16_t mV) {bgRefmV = mV;};
@@ -58,7 +62,8 @@ class PrecisionADC {
 
         uint16_t readVcc(); // Returns the real VCC based on the bandgap voltage
 
-        void fineTuneBG();  // Interactively fine tune the bandgap reference
+        void calibrateBG();  // Interactively fine tune the bandgap reference
+
         uint16_t analogVoltage(uint16_t pin); // Samples voltage on analog pin
 };
 

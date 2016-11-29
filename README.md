@@ -1,4 +1,4 @@
-Precise ADC meassuring regardless of supply voltage
+Precise ADC measuring regardless of supply voltage
 ===================================================
 
 Abstract
@@ -92,7 +92,7 @@ A simple way of meassuring the true bandgap voltage is:
    between calculated VCC and measured VCC
 7. repeat from step 3 until calculated and measured VCC matches.
 
-The `PrecisionADC::fineTuneBG()` method can be used to do exactly this. When
+The `PrecisionADC::calibrateBG()` method can be used to do exactly this. When
 called, it will present a menu of option on the serial console, and allow you to
 enter a _Fine Tuning_ state where the calculated VCC and bandgap reference value
 used for the calculation is output every second.
@@ -123,10 +123,21 @@ To use this library:
 1. include it in your source
 2. create an instance of the `PrecisionADC` class
 3. ensure the instance has an accurate bandgap reference
-4. use the `analogVoltage()` method on any anlog pin to read as milli volt
+4. use the `analogVoltage()` method on any anlog pin to read as millivolt
 
 Example:
 ```c++
+/**
+ * Example of using the PrecisionADC library with an anolog sensor and an
+ * option for calibrating the bandgap voltage.
+ *
+ * Connect any anolog type sensor to A0 and hook up a mulitple to measure the
+ * supply voltage to the MCU.
+ *
+ * While running, the analog voltage from the sendsor will be displayed.
+ * Press v to display the currently measured MCU supply voltage.
+ * Press c to calibrate the bandgap reference voltage.
+ */
 #include <PrecisionADC.h>
 
 #define SENSEPIN A0     // Pin sensor is connected to
@@ -145,8 +156,8 @@ void serialEvent() {
 
     in = Serial.read();
     switch (in) {
-        case 't':
-            pADC.fineTuneBG();
+        case 'c':
+            pADC.calibrateBG();
             break;
         case 'v':
             Serial.print("Vcc: ");
