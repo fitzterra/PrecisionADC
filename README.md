@@ -51,14 +51,14 @@ Solving for Vref, we get:
     Vref = (Vin/ADC) * 1024
 
 In short this means that we can determine VCC by measuring the internal bandgap
-voltage with VCC as reference, and the nused the rearranged formula to figure
+voltage with VCC as reference, and then use the rearranged formula to figure
 out the actual VCC.
 
 Unfortunately, the bandgap voltage is not 100% accurate, and can be anywhere
-between 1.0V and 1.2V for a given chip, so for more more accurate results, we
+between 1.0V and 1.2V for a given chip, so for more accurate results, we
 need to know the exact bandgap voltage. See below.
 
-Overcomming bangap reference variations
+Overcomming bandgap reference variations
 ---------------------------------------
 The Atmel datasheets mentions that the bandgap reference voltage can be anywhere
 between 1.0V and 1.2V, with a typical value of 1.1V. That is a 200mV variation,
@@ -93,7 +93,7 @@ A simple way of meassuring the true bandgap voltage is:
 7. repeat from step 3 until calculated and measured VCC matches.
 
 The `PrecisionADC::calibrateBG()` method can be used to do exactly this. When
-called, it will present a menu of option on the serial console, and allow you to
+called, it will present a menu of options on the serial console, and allow you to
 enter a _Fine Tuning_ state where the calculated VCC and bandgap reference value
 used for the calculation is output every second.
 
@@ -101,7 +101,7 @@ You then compare the calculated VCC to your multimeter measured VCC for the MCU,
 and use the keyboard up and down arrows to adjust the bandgap reference until
 the measured and calculated VCCs match.
 
-Once the tru bandgap reference has been found in this way, you have the option
+Once the true bandgap reference has been found in this way, you have the option
 to save this value to EEPROM. See below
 
 ### Saving the true bandgap reference on the MCU
